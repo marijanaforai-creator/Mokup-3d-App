@@ -18,3 +18,22 @@ function animate() {
     renderer.render(scene, camera);
 }
 animate();
+// Pravougaoni oblik kao magazin
+const geometry = new THREE.BoxGeometry(3, 4, 0.2);
+
+// Učitaj teksturu iz fajla koji si uploadovala
+const textureLoader = new THREE.TextureLoader();
+const coverTexture = textureLoader.load('Gemini_Generated_Image_5yt7u25yt7u25yt7 (1).jfif'); 
+const material = new THREE.MeshBasicMaterial({map: coverTexture});
+
+const magazine = new THREE.Mesh(geometry, material);
+scene.add(magazine);
+
+camera.position.z = 6;
+
+function animate() {
+    requestAnimationFrame(animate);
+    magazine.rotation.y += 0.01;
+    renderer.render(scene, camera);
+}
+animate();
