@@ -1,12 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="sr">
 <head>
   <meta charset="UTF-8">
   <title>Moj 3D Mockup</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body { margin: 0; background: #f0f0f0; }
+    canvas { display: block; }
+  </style>
 </head>
 <body>
-  <h1>Dobrodošla u 3D mockup aplikaciju!</h1>
   <canvas id="scene"></canvas>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="app.js"></script>
