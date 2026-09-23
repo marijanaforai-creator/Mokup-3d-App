@@ -7,7 +7,9 @@
   <style>
     body { margin: 0; background: #f0f0f0; }
     canvas { display: block; }
-  </style>
+  </style><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="app.js"></script>
+
 </head>
 <body>
   <canvas id="scene"></canvas>
