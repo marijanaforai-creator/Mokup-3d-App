@@ -1,0 +1,14 @@
+# Mokup-3d-App
+Web aplikacija za kereiranje 2D i 3D mokapa sa AI Generacijom
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Moj 3D Mockup</title>
+</head>
+<body>
+  <h1>Dobrodošla u 3D mockup!</h1>
+  <canvas id="scene"></canvas>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
