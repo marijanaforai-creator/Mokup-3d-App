@@ -1,1 +1,825 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Marijana AI Studio</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f1ec;
+    color: #222;
+    overflow: hidden;
+}
+
+.app {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 250px 1fr 280px;
+    grid-template-rows: 64px 1fr 82px;
+}
+
+/* TOP BAR */
+.topbar {
+    grid-column: 1 / 4;
+    background: #171717;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: .5px;
+}
+
+.logo span {
+    color: #c9a96e;
+}
+
+.top-actions {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.dark-btn {
+    background: #292929;
+    color: white;
+}
+
+.gold-btn {
+    background: #c9a96e;
+    color: #171717;
+    font-weight: 700;
+}
+
+/* LEFT LIBRARY */
+.sidebar {
+    background: #ffffff;
+    border-right: 1px solid #ddd;
+    padding: 18px;
+    overflow-y: auto;
+}
+
+.sidebar h3 {
+    margin: 0 0 15px;
+    font-size: 14px;
+}
+
+.category {
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #888;
+    font-weight: 700;
+}
+
+.object-btn {
+    width: 100%;
+    text-align: left;
+    background: #f6f4f1;
+    margin-bottom: 8px;
+}
+
+.object-btn:hover {
+    background: #ebe6df;
+}
+
+/* CANVAS */
+.workspace {
+    position: relative;
+    background:
+        radial-gradient(circle at center, #ffffff 0%, #f2eee8 70%);
+    overflow: hidden;
+}
+
+#scene {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* RIGHT PANEL */
+.properties {
+    background: white;
+    border-left: 1px solid #ddd;
+    padding: 18px;
+    overflow-y: auto;
+}
+
+.properties h3 {
+    margin-top: 0;
+    font-size: 14px;
+}
+
+.property {
+    margin-bottom: 16px;
+}
+
+.property label {
+    display: block;
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 6px;
+}
+
+.property input,
+.property select {
+    width: 100%;
+    padding: 9px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+}
+
+/* AI BAR */
+.ai-bar {
+    grid-column: 1 / 4;
+    background: #ffffff;
+    border-top: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+}
+
+.ai-label {
+    font-weight: 700;
+    color: #b08b4d;
+    white-space: nowrap;
+}
+
+#prompt {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid #d8d2ca;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.empty-message {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #777;
+    pointer-events: none;
+}
+
+.empty-message strong {
+    display: block;
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.status {
+    position: absolute;
+    left: 15px;
+    bottom: 15px;
+    background: rgba(255,255,255,.9);
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 11px;
+    color: #777;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <header class="topbar">
+        <div class="logo">
+            MARijana <span>AI Studio</span>
+        </div>
+
+        <div class="top-actions">
+            <button class="dark-btn" onclick="resetScene()">Nova scena</button>
+            <button class="gold-btn" onclick="exportImage()">Izvezi PNG</button>
+        </div>
+    </header>
+
+    <!-- LEFT -->
+    <aside class="sidebar">
+
+        <h3>3D ELEMENTI</h3>
+
+        <div class="category">Uređaji</div>
+
+        <button class="object-btn" onclick="addObject('phone')">
+            📱 Telefon
+        </button>
+
+        <button class="object-btn" onclick="addObject('laptop')">
+            💻 Laptop
+        </button>
+
+        <button class="object-btn" onclick="addObject('tablet')">
+            📱 Tablet
+        </button>
+
+        <div class="category">Digitalni proizvodi</div>
+
+        <button class="object-btn" onclick="addObject('book')">
+            📖 Planner / Book
+        </button>
+
+        <button class="object-btn" onclick="addObject('card')">
+            ▭ Card
+        </button>
+
+        <button class="object-btn" onclick="addObject('page')">
+            📄 Floating Page
+        </button>
+
+        <div class="category">Scene</div>
+
+        <button class="object-btn" onclick="changeBackground('#f4f1ec')">
+            Beige
+        </button>
+
+        <button class="object-btn" onclick="changeBackground('#eeeeee')">
+            Silver
+        </button>
+
+        <button class="object-btn" onclick="changeBackground('#171717')">
+            Black
+        </button>
+
+    </aside>
+
+    <!-- CENTER -->
+    <main class="workspace">
+
+        <canvas id="scene"></canvas>
+
+        <div class="empty-message" id="emptyMessage">
+            <strong>Marijana AI Studio</strong>
+            Dodaj 3D element sa leve strane
+        </div>
+
+        <div class="status" id="status">
+            Spremno
+        </div>
+
+    </main>
+
+    <!-- RIGHT -->
+    <aside class="properties">
+
+        <h3>PROPERTIES</h3>
+
+        <div class="property">
+            <label>Odabrani objekat</label>
+            <input id="selectedObject" value="Nijedan" readonly>
+        </div>
+
+        <div class="property">
+            <label>Rotacija Y</label>
+            <input
+                id="rotationY"
+                type="range"
+                min="-3.14"
+                max="3.14"
+                step="0.01"
+                value="0"
+                oninput="changeRotation(this.value)"
+            >
+        </div>
+
+        <div class="property">
+            <label>Skala</label>
+            <input
+                id="scale"
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.05"
+                value="1"
+                oninput="changeScale(this.value)"
+            >
+        </div>
+
+        <div class="property">
+            <label>Pozicija X</label>
+            <input
+                id="positionX"
+                type="range"
+                min="-5"
+                max="5"
+                step="0.1"
+                value="0"
+                oninput="changePositionX(this.value)"
+            >
+        </div>
+
+        <div class="property">
+            <label>Pozicija Y</label>
+            <input
+                id="positionY"
+                type="range"
+                min="-3"
+                max="3"
+                step="0.1"
+                value="0"
+                oninput="changePositionY(this.value)"
+            >
+        </div>
+
+    </aside>
+
+    <!-- AI -->
+    <div class="ai-bar">
+
+        <div class="ai-label">
+            ✨ AI SCENE
+        </div>
+
+        <input
+            id="prompt"
+            placeholder="Npr. napravi scenu sa telefonom, laptopom i plannerom..."
+        >
+
+        <button class="gold-btn" onclick="generateScene()">
+            Generiši
+        </button>
+
+    </div>
+
+</div>
+
+<!-- THREE.JS -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+
+const canvas = document.getElementById("scene");
+
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
+    preserveDrawingBuffer: true
+});
+
+renderer.setPixelRatio(window.devicePixelRatio);
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+    45,
+    1,
+    0.1,
+    100
+);
+
+camera.position.set(0, 0, 9);
+
+const light = new THREE.HemisphereLight(
+    0xffffff,
+    0x777777,
+    2
+);
+
+scene.add(light);
+
+const directionalLight = new THREE.DirectionalLight(
+    0xffffff,
+    2
+);
+
+directionalLight.position.set(4, 6, 8);
+
+scene.add(directionalLight);
+
+const objects = [];
+
+let selected = null;
+
+/* RESIZE */
+
+function resize() {
+
+    const rect = canvas.getBoundingClientRect();
+
+    renderer.setSize(
+        rect.width,
+        rect.height,
+        false
+    );
+
+    camera.aspect =
+        rect.width / rect.height;
+
+    camera.updateProjectionMatrix();
+}
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+resize();
+
+/* OBJECT CREATION */
+
+function createBox(
+    width,
+    height,
+    depth,
+    color,
+    name
+) {
+
+    const geometry =
+        new THREE.BoxGeometry(
+            width,
+            height,
+            depth
+        );
+
+    const material =
+        new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: .35,
+            metalness: .1
+        });
+
+    const mesh =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+    mesh.name = name;
+
+    scene.add(mesh);
+
+    objects.push(mesh);
+
+    selectObject(mesh);
+
+    document.getElementById(
+        "emptyMessage"
+    ).style.display = "none";
+
+    return mesh;
+}
+
+/* ADD OBJECT */
+
+function addObject(type) {
+
+    let obj;
+
+    if (type === "phone") {
+
+        obj = createBox(
+            1.5,
+            2.8,
+            .25,
+            0x222222,
+            "Telefon"
+        );
+
+    }
+
+    if (type === "laptop") {
+
+        obj = createBox(
+            3.2,
+            2,
+            .22,
+            0xc0c0c0,
+            "Laptop"
+        );
+
+    }
+
+    if (type === "tablet") {
+
+        obj = createBox(
+            2.4,
+            3.1,
+            .22,
+            0x444444,
+            "Tablet"
+        );
+
+    }
+
+    if (type === "book") {
+
+        obj = createBox(
+            2.5,
+            3.2,
+            .5,
+            0x9c7b52,
+            "Planner"
+        );
+
+    }
+
+    if (type === "card") {
+
+        obj = createBox(
+            2.5,
+            1.6,
+            .15,
+            0xd0b27c,
+            "Card"
+        );
+
+    }
+
+    if (type === "page") {
+
+        obj = createBox(
+            2.4,
+            3,
+            .08,
+            0xf5f5f5,
+            "Floating Page"
+        );
+
+    }
+
+    if (obj) {
+
+        obj.position.x =
+            (objects.length - 1) * .4 - 1;
+
+        obj.position.y =
+            (objects.length - 1) * .15;
+
+        document.getElementById("status").innerText =
+            "Dodat: " + obj.name;
+    }
+}
+
+/* SELECT */
+
+function selectObject(obj) {
+
+    selected = obj;
+
+    document.getElementById(
+        "selectedObject"
+    ).value = obj.name;
+
+    document.getElementById(
+        "rotationY"
+    ).value = obj.rotation.y;
+
+    document.getElementById(
+        "scale"
+    ).value = obj.scale.x;
+
+    document.getElementById(
+        "positionX"
+    ).value = obj.position.x;
+
+    document.getElementById(
+        "positionY"
+    ).value = obj.position.y;
+}
+
+/* PROPERTIES */
+
+function changeRotation(value) {
+
+    if (!selected) return;
+
+    selected.rotation.y =
+        Number(value);
+}
+
+function changeScale(value) {
+
+    if (!selected) return;
+
+    selected.scale.set(
+        Number(value),
+        Number(value),
+        Number(value)
+    );
+}
+
+function changePositionX(value) {
+
+    if (!selected) return;
+
+    selected.position.x =
+        Number(value);
+}
+
+function changePositionY(value) {
+
+    if (!selected) return;
+
+    selected.position.y =
+        Number(value);
+}
+
+/* BACKGROUND */
+
+function changeBackground(color) {
+
+    document.querySelector(
+        ".workspace"
+    ).style.background =
+        color;
+}
+
+/* RESET */
+
+function resetScene() {
+
+    objects.forEach(
+        obj => scene.remove(obj)
+    );
+
+    objects.length = 0;
+
+    selected = null;
+
+    document.getElementById(
+        "selectedObject"
+    ).value = "Nijedan";
+
+    document.getElementById(
+        "emptyMessage"
+    ).style.display = "block";
+
+    document.getElementById(
+        "status"
+    ).innerText =
+        "Nova scena";
+}
+
+/* AI SCENE */
+
+function generateScene() {
+
+    const text =
+        document.getElementById(
+            "prompt"
+        ).value.toLowerCase();
+
+    resetScene();
+
+    if (text.includes("telefon")) {
+        addObject("phone");
+    }
+
+    if (text.includes("laptop")) {
+        addObject("laptop");
+    }
+
+    if (text.includes("tablet")) {
+        addObject("tablet");
+    }
+
+    if (
+        text.includes("planner") ||
+        text.includes("planer") ||
+        text.includes("knjig")
+    ) {
+        addObject("book");
+    }
+
+    if (text.includes("card")) {
+        addObject("card");
+    }
+
+    if (
+        text.includes("stranic") ||
+        text.includes("page")
+    ) {
+        addObject("page");
+    }
+
+    if (objects.length === 0) {
+
+        addObject("phone");
+        addObject("laptop");
+        addObject("book");
+
+    }
+
+    document.getElementById(
+        "status"
+    ).innerText =
+        "AI scena generisana";
+}
+
+/* EXPORT */
+
+function exportImage() {
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+    const link =
+        document.createElement("a");
+
+    link.download =
+        "marijana-ai-studio.png";
+
+    link.href =
+        renderer.domElement.toDataURL(
+            "image/png"
+        );
+
+    link.click();
+}
+
+/* CLICK OBJECT */
+
+canvas.addEventListener(
+    "pointerdown",
+    function(event) {
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+        const mouse =
+            new THREE.Vector2(
+                ((event.clientX - rect.left) /
+                    rect.width) * 2 - 1,
+
+                -((event.clientY - rect.top) /
+                    rect.height) * 2 + 1
+            );
+
+        const raycaster =
+            new THREE.Raycaster();
+
+        raycaster.setFromCamera(
+            mouse,
+            camera
+        );
+
+        const hits =
+            raycaster.intersectObjects(
+                objects
+            );
+
+        if (hits.length) {
+
+            selectObject(
+                hits[0].object
+            );
+
+            document.getElementById(
+                "status"
+            ).innerText =
+                "Odabrano: " +
+                hits[0].object.name;
+        }
+
+    }
+);
+
+/* ANIMATION */
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+    renderer.render(
+        scene,
+        camera
+    );
+}
+
+animate();
+
+</script>
+
+</body>
+</html>
