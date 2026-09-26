@@ -1,825 +1,795 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marijana AI Studio</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans za elegantan premium izgled -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<title>Marijana AI Studio</title>
+  <!-- Three.js & OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
-<style>
-* {
-    box-sizing: border-box;
-}
+  <style>
+    :root {
+      --bg-dark: #0f1117;
+      --panel-bg: #181b24;
+      --panel-border: #282d3c;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-danger: #ef4444;
+      --accent-danger-hover: #dc2626;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f1ec;
-    color: #222;
-    overflow: hidden;
-}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
 
-.app {
-    height: 100vh;
-    display: grid;
-    grid-template-columns: 250px 1fr 280px;
-    grid-template-rows: 64px 1fr 82px;
-}
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-/* TOP BAR */
-.topbar {
-    grid-column: 1 / 4;
-    background: #171717;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 22px;
-}
+    /* Header */
+    header {
+      height: 60px;
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 10;
+    }
 
-.logo {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: .5px;
-}
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-.logo span {
-    color: #c9a96e;
-}
+    .brand-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 2px 8px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
 
-.top-actions {
-    display: flex;
-    gap: 10px;
-}
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
 
-button {
-    border: 0;
-    border-radius: 8px;
-    padding: 10px 14px;
-    cursor: pointer;
-    font-size: 13px;
-}
+    /* Main Workspace */
+    .workspace {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 60px);
+      position: relative;
+    }
 
-.dark-btn {
-    background: #292929;
-    color: white;
-}
+    /* Left Sidebar: Mockup Library */
+    .sidebar-left {
+      width: 240px;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--panel-border);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 5;
+    }
 
-.gold-btn {
-    background: #c9a96e;
-    color: #171717;
-    font-weight: 700;
-}
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
 
-/* LEFT LIBRARY */
-.sidebar {
-    background: #ffffff;
-    border-right: 1px solid #ddd;
-    padding: 18px;
-    overflow-y: auto;
-}
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 14px;
+      background: #1f2330;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
 
-.sidebar h3 {
-    margin: 0 0 15px;
-    font-size: 14px;
-}
+    .tool-btn:hover {
+      background: #272d3d;
+      border-color: #3b4255;
+      transform: translateY(-1px);
+    }
 
-.category {
-    margin-top: 20px;
-    margin-bottom: 8px;
-    font-size: 11px;
-    text-transform: uppercase;
-    color: #888;
-    font-weight: 700;
-}
+    /* Canvas Area */
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      background: #0b0c10;
+      outline: none;
+    }
 
-.object-btn {
-    width: 100%;
-    text-align: left;
-    background: #f6f4f1;
-    margin-bottom: 8px;
-}
+    #webgl-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
 
-.object-btn:hover {
-    background: #ebe6df;
-}
+    /* Right Sidebar: Properties Panel */
+    .sidebar-right {
+      width: 290px;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--panel-border);
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      z-index: 5;
+    }
 
-/* CANVAS */
-.workspace {
-    position: relative;
-    background:
-        radial-gradient(circle at center, #ffffff 0%, #f2eee8 70%);
-    overflow: hidden;
-}
+    .panel-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-#scene {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
+    .selected-indicator {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-/* RIGHT PANEL */
-.properties {
-    background: white;
-    border-left: 1px solid #ddd;
-    padding: 18px;
-    overflow-y: auto;
-}
+    .prop-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
-.properties h3 {
-    margin-top: 0;
-    font-size: 14px;
-}
+    .prop-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
 
-.property {
-    margin-bottom: 16px;
-}
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      background: #242938;
+      border-radius: 4px;
+      height: 6px;
+      outline: none;
+      cursor: pointer;
+    }
 
-.property label {
-    display: block;
-    font-size: 12px;
-    color: #777;
-    margin-bottom: 6px;
-}
+    /* Design & Action Buttons */
+    .action-btn {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
 
-.property input,
-.property select {
-    width: 100%;
-    padding: 9px;
-    border: 1px solid #ddd;
-    border-radius: 7px;
-}
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
 
-/* AI BAR */
-.ai-bar {
-    grid-column: 1 / 4;
-    background: #ffffff;
-    border-top: 1px solid #ddd;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-}
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
 
-.ai-label {
-    font-weight: 700;
-    color: #b08b4d;
-    white-space: nowrap;
-}
+    .btn-secondary {
+      background: #252a38;
+      color: #e2e8f0;
+      border-color: var(--panel-border);
+    }
 
-#prompt {
-    flex: 1;
-    padding: 12px 14px;
-    border: 1px solid #d8d2ca;
-    border-radius: 10px;
-    font-size: 14px;
-}
+    .btn-secondary:hover {
+      background: #2f3546;
+    }
 
-.empty-message {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: #777;
-    pointer-events: none;
-}
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.25);
+    }
 
-.empty-message strong {
-    display: block;
-    color: #333;
-    font-size: 20px;
-    margin-bottom: 8px;
-}
+    .btn-danger:hover {
+      background: var(--accent-danger);
+      color: #fff;
+    }
 
-.status {
-    position: absolute;
-    left: 15px;
-    bottom: 15px;
-    background: rgba(255,255,255,.9);
-    padding: 7px 10px;
-    border-radius: 7px;
-    font-size: 11px;
-    color: #777;
-}
-</style>
+    .hidden {
+      display: none !important;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--panel-border);
+      margin: 4px 0;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="app">
+  <!-- 1. Header sa novim brendingom -->
+  <header>
+    <div class="brand-title">
+      Marijana AI Studio
+      <span class="brand-badge">3D Mockups</span>
+    </div>
+    <div class="header-actions">
+      <button class="action-btn btn-primary" id="btn-export-png">
+        📸 Izvezi PNG
+      </button>
+    </div>
+  </header>
 
-    <header class="topbar">
-        <div class="logo">
-            MARijana <span>AI Studio</span>
-        </div>
-
-        <div class="top-actions">
-            <button class="dark-btn" onclick="resetScene()">Nova scena</button>
-            <button class="gold-btn" onclick="exportImage()">Izvezi PNG</button>
-        </div>
-    </header>
-
-    <!-- LEFT -->
-    <aside class="sidebar">
-
-        <h3>3D ELEMENTI</h3>
-
-        <div class="category">Uređaji</div>
-
-        <button class="object-btn" onclick="addObject('phone')">
-            📱 Telefon
-        </button>
-
-        <button class="object-btn" onclick="addObject('laptop')">
-            💻 Laptop
-        </button>
-
-        <button class="object-btn" onclick="addObject('tablet')">
-            📱 Tablet
-        </button>
-
-        <div class="category">Digitalni proizvodi</div>
-
-        <button class="object-btn" onclick="addObject('book')">
-            📖 Planner / Book
-        </button>
-
-        <button class="object-btn" onclick="addObject('card')">
-            ▭ Card
-        </button>
-
-        <button class="object-btn" onclick="addObject('page')">
-            📄 Floating Page
-        </button>
-
-        <div class="category">Scene</div>
-
-        <button class="object-btn" onclick="changeBackground('#f4f1ec')">
-            Beige
-        </button>
-
-        <button class="object-btn" onclick="changeBackground('#eeeeee')">
-            Silver
-        </button>
-
-        <button class="object-btn" onclick="changeBackground('#171717')">
-            Black
-        </button>
-
-    </aside>
-
-    <!-- CENTER -->
-    <main class="workspace">
-
-        <canvas id="scene"></canvas>
-
-        <div class="empty-message" id="emptyMessage">
-            <strong>Marijana AI Studio</strong>
-            Dodaj 3D element sa leve strane
-        </div>
-
-        <div class="status" id="status">
-            Spremno
-        </div>
-
-    </main>
-
-    <!-- RIGHT -->
-    <aside class="properties">
-
-        <h3>PROPERTIES</h3>
-
-        <div class="property">
-            <label>Odabrani objekat</label>
-            <input id="selectedObject" value="Nijedan" readonly>
-        </div>
-
-        <div class="property">
-            <label>Rotacija Y</label>
-            <input
-                id="rotationY"
-                type="range"
-                min="-3.14"
-                max="3.14"
-                step="0.01"
-                value="0"
-                oninput="changeRotation(this.value)"
-            >
-        </div>
-
-        <div class="property">
-            <label>Skala</label>
-            <input
-                id="scale"
-                type="range"
-                min="0.5"
-                max="2"
-                step="0.05"
-                value="1"
-                oninput="changeScale(this.value)"
-            >
-        </div>
-
-        <div class="property">
-            <label>Pozicija X</label>
-            <input
-                id="positionX"
-                type="range"
-                min="-5"
-                max="5"
-                step="0.1"
-                value="0"
-                oninput="changePositionX(this.value)"
-            >
-        </div>
-
-        <div class="property">
-            <label>Pozicija Y</label>
-            <input
-                id="positionY"
-                type="range"
-                min="-3"
-                max="3"
-                step="0.1"
-                value="0"
-                oninput="changePositionY(this.value)"
-            >
-        </div>
-
-    </aside>
-
-    <!-- AI -->
-    <div class="ai-bar">
-
-        <div class="ai-label">
-            ✨ AI SCENE
-        </div>
-
-        <input
-            id="prompt"
-            placeholder="Npr. napravi scenu sa telefonom, laptopom i plannerom..."
-        >
-
-        <button class="gold-btn" onclick="generateScene()">
-            Generiši
-        </button>
-
+  <!-- Glavna radna površina -->
+  <div class="workspace">
+    <!-- Leva traka: Mockup elementi -->
+    <div class="sidebar-left">
+      <div class="section-title">Dodaj Mockup</div>
+      <button class="tool-btn" id="btn-add-phone">
+        <span>📱</span> Telefon
+      </button>
     </div>
 
-</div>
+    <!-- 3D Canvas -->
+    <div class="canvas-container" id="canvas-wrapper">
+      <canvas id="webgl-canvas"></canvas>
+    </div>
 
-<!-- THREE.JS -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <!-- Desna traka: Properties Panel -->
+    <div class="sidebar-right" id="properties-panel">
+      <!-- Zaglavlje selekcije -->
+      <div class="panel-group">
+        <div class="section-title">SELECTED OBJECT</div>
+        <div class="selected-indicator" id="selected-obj-title">Nijedan</div>
+      </div>
 
-<script>
+      <div class="divider"></div>
 
-const canvas = document.getElementById("scene");
+      <!-- DESIGN: Content Frame sekcija (Upload / Replace / Remove) -->
+      <div class="panel-group hidden" id="design-section">
+        <div class="section-title">DESIGN</div>
+        
+        <input type="file" id="image-file-input" accept="image/png, image/jpeg, image/webp" class="hidden" />
 
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: true,
-    preserveDrawingBuffer: true
-});
+        <button class="action-btn btn-primary" id="btn-upload-image">
+          Upload image
+        </button>
+        <button class="action-btn btn-secondary hidden" id="btn-replace-image">
+          Replace image
+        </button>
+        <button class="action-btn btn-danger hidden" id="btn-remove-image">
+          Remove image
+        </button>
+      </div>
 
-renderer.setPixelRatio(window.devicePixelRatio);
+      <!-- Transformacije (Rotation Y, Scale, Pos X, Pos Y) -->
+      <div class="panel-group hidden" id="transforms-section">
+        <div class="section-title">TRANSFORMACIJE</div>
 
-const scene = new THREE.Scene();
+        <div class="prop-row">
+          <div class="prop-label-row">
+            <span>Rotation Y</span>
+            <span id="val-rot-y">0°</span>
+          </div>
+          <input type="range" id="input-rot-y" min="-180" max="180" value="0" />
+        </div>
 
-const camera = new THREE.PerspectiveCamera(
-    45,
-    1,
-    0.1,
-    100
-);
+        <div class="prop-row">
+          <div class="prop-label-row">
+            <span>Scale</span>
+            <span id="val-scale">1.0</span>
+          </div>
+          <input type="range" id="input-scale" min="0.3" max="2.5" step="0.05" value="1" />
+        </div>
 
-camera.position.set(0, 0, 9);
+        <div class="prop-row">
+          <div class="prop-label-row">
+            <span>Position X</span>
+            <span id="val-pos-x">0.0</span>
+          </div>
+          <input type="range" id="input-pos-x" min="-4" max="4" step="0.1" value="0" />
+        </div>
 
-const light = new THREE.HemisphereLight(
-    0xffffff,
-    0x777777,
-    2
-);
+        <div class="prop-row">
+          <div class="prop-label-row">
+            <span>Position Y</span>
+            <span id="val-pos-y">0.0</span>
+          </div>
+          <input type="range" id="input-pos-y" min="-3" max="3" step="0.1" value="0" />
+        </div>
+      </div>
+    </div>
+  </div>
 
-scene.add(light);
+  <script>
+    /* =========================================================================
+       1. INICIJALIZACIJA THREE.JS SCENE I KAMERE
+       ========================================================================= */
+    const container = document.getElementById('canvas-wrapper');
+    const canvas = document.getElementById('webgl-canvas');
 
-const directionalLight = new THREE.DirectionalLight(
-    0xffffff,
-    2
-);
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0e1118);
 
-directionalLight.position.set(4, 6, 8);
+    const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, 0, 7.5);
 
-scene.add(directionalLight);
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      antialias: true,
+      preserveDrawingBuffer: true // Neophodno za pouzdan PNG export
+    });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
 
-const objects = [];
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
 
-let selected = null;
+    // Osvetljenje
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    scene.add(ambientLight);
 
-/* RESIZE */
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight1.position.set(5, 8, 5);
+    scene.add(dirLight1);
 
-function resize() {
+    const dirLight2 = new THREE.DirectionalLight(0x818cf8, 0.4);
+    dirLight2.position.set(-5, -3, -4);
+    scene.add(dirLight2);
 
-    const rect = canvas.getBoundingClientRect();
+    /* =========================================================================
+       2. REUSABLE CONTENT FRAME & MOCKUP ARHITEKTURA
+       ========================================================================= */
 
-    renderer.setSize(
-        rect.width,
-        rect.height,
-        false
-    );
-
-    camera.aspect =
-        rect.width / rect.height;
-
-    camera.updateProjectionMatrix();
-}
-
-window.addEventListener(
-    "resize",
-    resize
-);
-
-resize();
-
-/* OBJECT CREATION */
-
-function createBox(
-    width,
-    height,
-    depth,
-    color,
-    name
-) {
-
-    const geometry =
-        new THREE.BoxGeometry(
-            width,
-            height,
-            depth
-        );
-
-    const material =
-        new THREE.MeshStandardMaterial({
-            color: color,
-            roughness: .35,
-            metalness: .1
-        });
-
-    const mesh =
-        new THREE.Mesh(
-            geometry,
-            material
-        );
-
-    mesh.name = name;
-
-    scene.add(mesh);
-
-    objects.push(mesh);
-
-    selectObject(mesh);
-
-    document.getElementById(
-        "emptyMessage"
-    ).style.display = "none";
-
-    return mesh;
-}
-
-/* ADD OBJECT */
-
-function addObject(type) {
-
-    let obj;
-
-    if (type === "phone") {
-
-        obj = createBox(
-            1.5,
-            2.8,
-            .25,
-            0x222222,
-            "Telefon"
-        );
-
+    /**
+     * Pomoćna funkcija za generisanje zaobljene 2D konture (Rounded Rectangle)
+     */
+    function createRoundedRectShape(width, height, radius) {
+      const shape = new THREE.Shape();
+      const x = -width / 2;
+      const y = -height / 2;
+      shape.moveTo(x + radius, y);
+      shape.lineTo(x + width - radius, y);
+      shape.quadraticCurveTo(x + width, y, x + width, y + radius);
+      shape.lineTo(x + width, y + height - radius);
+      shape.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      shape.lineTo(x + radius, y + height);
+      shape.quadraticCurveTo(x, y + height, x, y + height - radius);
+      shape.lineTo(x, y + radius);
+      shape.quadraticCurveTo(x, y, x + radius, y);
+      return shape;
     }
 
-    if (type === "laptop") {
+    /**
+     * Pravi generički Content Frame koji se može zakačiti na bilo koji 3D Mockup
+     */
+    function createContentFrame(width, height, radius = 0.1) {
+      const shape = createRoundedRectShape(width, height, radius);
+      const geometry = new THREE.ShapeGeometry(shape, 32);
 
-        obj = createBox(
-            3.2,
-            2,
-            .22,
-            0xc0c0c0,
-            "Laptop"
-        );
+      // Default neutralni ekran
+      const defaultMaterial = new THREE.MeshStandardMaterial({
+        color: 0x111317,
+        roughness: 0.25,
+        metalness: 0.1
+      });
 
+      const frameMesh = new THREE.Mesh(geometry, defaultMaterial);
+      frameMesh.name = "ContentFrame";
+      frameMesh.userData = {
+        isContentFrame: true,
+        frameWidth: width,
+        frameHeight: height,
+        hasImage: false,
+        activeTexture: null
+      };
+
+      return frameMesh;
     }
 
-    if (type === "tablet") {
+    /**
+     * Kreira kompletan telefon kao hijerarhijski 3D Mockup sa telom i namenskim ekranom
+     */
+    function createPhoneMockup() {
+      const phoneGroup = new THREE.Group();
+      phoneGroup.name = "Telefon";
+      phoneGroup.userData = {
+        isMockupRoot: true,
+        type: "phone"
+      };
 
-        obj = createBox(
-            2.4,
-            3.1,
-            .22,
-            0x444444,
-            "Tablet"
-        );
+      const phoneWidth = 2.0;
+      const phoneHeight = 4.1;
+      const phoneDepth = 0.16;
+      const phoneRadius = 0.28;
 
+      // 1. Telo telefona (ExtrudeGeometry za premijum zakrivljene ivice)
+      const bodyShape = createRoundedRectShape(phoneWidth, phoneHeight, phoneRadius);
+      const extrudeSettings = {
+        depth: phoneDepth,
+        bevelEnabled: true,
+        bevelSegments: 6,
+        steps: 1,
+        bevelSize: 0.04,
+        bevelThickness: 0.04
+      };
+      const bodyGeom = new THREE.ExtrudeGeometry(bodyShape, extrudeSettings);
+      bodyGeom.center(); // centriranje tela
+
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: 0x1e222d,
+        metalness: 0.85,
+        roughness: 0.35
+      });
+      const bodyMesh = new THREE.Mesh(bodyGeom, bodyMat);
+      bodyMesh.name = "PhoneBody";
+      phoneGroup.add(bodyMesh);
+
+      // 2. Kamera bump na poleđini
+      const camBumpShape = createRoundedRectShape(0.65, 0.65, 0.15);
+      const camGeom = new THREE.ExtrudeGeometry(camBumpShape, { depth: 0.04, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02 });
+      const camMesh = new THREE.Mesh(camGeom, bodyMat);
+      camMesh.position.set(-0.55, 1.35, -phoneDepth / 2 - 0.04);
+      phoneGroup.add(camMesh);
+
+      // 3. Content Frame (Ekran telefona)
+      const screenWidth = 1.84;
+      const screenHeight = 3.94;
+      const screenRadius = 0.22;
+      const screenFrame = createContentFrame(screenWidth, screenHeight, screenRadius);
+      
+      // Postavljanje ekrana tik ispred prednje maske
+      screenFrame.position.set(0, 0, (phoneDepth / 2) + 0.041);
+      phoneGroup.add(screenFrame);
+
+      // Referenca za lak pristup ekranu iz korena
+      phoneGroup.userData.contentFrame = screenFrame;
+
+      return phoneGroup;
     }
 
-    if (type === "book") {
+    /**
+     * Canva-Style Object-Fit: Cover algoritam za Three.js teksturu
+     */
+    function applyImageToFrame(frameMesh, imgElement) {
+      if (!frameMesh || !frameMesh.userData.isContentFrame) return;
 
-        obj = createBox(
-            2.5,
-            3.2,
-            .5,
-            0x9c7b52,
-            "Planner"
-        );
+      // Čišćenje stare teksture
+      if (frameMesh.userData.activeTexture) {
+        frameMesh.userData.activeTexture.dispose();
+      }
 
+      const texture = new THREE.Texture(imgElement);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.generateMipmaps = true;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+
+      // Računanje srazmere za object-fit: cover
+      const frameAspect = frameMesh.userData.frameWidth / frameMesh.userData.frameHeight;
+      const imageAspect = imgElement.width / imgElement.height;
+
+      if (imageAspect > frameAspect) {
+        // Slika je šira od ekrana -> skaliraj po visini, cropuj višak širine
+        texture.repeat.set(frameAspect / imageAspect, 1);
+        texture.offset.set((1 - (frameAspect / imageAspect)) / 2, 0);
+      } else {
+        // Slika je viša od ekrana -> skaliraj po širini, cropuj višak visine
+        texture.repeat.set(1, imageAspect / frameAspect);
+        texture.offset.set(0, (1 - (imageAspect / frameAspect)) / 2);
+      }
+
+      texture.needsUpdate = true;
+
+      // Ažuriranje materijala ekrana
+      if (frameMesh.material) frameMesh.material.dispose();
+      frameMesh.material = new THREE.MeshBasicMaterial({
+        map: texture,
+        toneMapped: false
+      });
+
+      frameMesh.userData.activeTexture = texture;
+      frameMesh.userData.hasImage = true;
     }
 
-    if (type === "card") {
+    /**
+     * Vraća ekran u početno neutralno stanje
+     */
+    function removeImageFromFrame(frameMesh) {
+      if (!frameMesh || !frameMesh.userData.isContentFrame) return;
 
-        obj = createBox(
-            2.5,
-            1.6,
-            .15,
-            0xd0b27c,
-            "Card"
-        );
+      if (frameMesh.userData.activeTexture) {
+        frameMesh.userData.activeTexture.dispose();
+        frameMesh.userData.activeTexture = null;
+      }
 
+      if (frameMesh.material) frameMesh.material.dispose();
+      frameMesh.material = new THREE.MeshStandardMaterial({
+        color: 0x111317,
+        roughness: 0.25,
+        metalness: 0.1
+      });
+
+      frameMesh.userData.hasImage = false;
     }
 
-    if (type === "page") {
+    /* =========================================================================
+       3. UPRAVLJANJE OBJEKTIMA I SELEKCIJOM
+       ========================================================================= */
+    const mockupsInScene = [];
+    let selectedMockup = null;
 
-        obj = createBox(
-            2.4,
-            3,
-            .08,
-            0xf5f5f5,
-            "Floating Page"
-        );
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
 
+    // DOM elementi panela
+    const selectedObjTitle = document.getElementById('selected-obj-title');
+    const designSection = document.getElementById('design-section');
+    const transformsSection = document.getElementById('transforms-section');
+    const btnUpload = document.getElementById('btn-upload-image');
+    const btnReplace = document.getElementById('btn-replace-image');
+    const btnRemove = document.getElementById('btn-remove-image');
+    const fileInput = document.getElementById('image-file-input');
+
+    const inputRotY = document.getElementById('input-rot-y');
+    const inputScale = document.getElementById('input-scale');
+    const inputPosX = document.getElementById('input-pos-x');
+    const inputPosY = document.getElementById('input-pos-y');
+
+    const valRotY = document.getElementById('val-rot-y');
+    const valScale = document.getElementById('val-scale');
+    const valPosX = document.getElementById('val-pos-x');
+    const valPosY = document.getElementById('val-pos-y');
+
+    function selectMockup(mockupRoot) {
+      selectedMockup = mockupRoot;
+
+      if (!mockupRoot) {
+        selectedObjTitle.textContent = "Nijedan";
+        designSection.classList.add('hidden');
+        transformsSection.classList.add('hidden');
+        return;
+      }
+
+      selectedObjTitle.textContent = mockupRoot.name || "Mockup";
+      transformsSection.classList.remove('hidden');
+
+      // Sinhronizacija vrednosti u panelu
+      const degY = Math.round(THREE.MathUtils.radToDeg(mockupRoot.rotation.y));
+      inputRotY.value = degY;
+      valRotY.textContent = `${degY}°`;
+
+      inputScale.value = mockupRoot.scale.x;
+      valScale.textContent = mockupRoot.scale.x.toFixed(2);
+
+      inputPosX.value = mockupRoot.position.x;
+      valPosX.textContent = mockupRoot.position.x.toFixed(1);
+
+      inputPosY.value = mockupRoot.position.y;
+      valPosY.textContent = mockupRoot.position.y.toFixed(1);
+
+      // Prikaz DESIGN sekcije ako mockup poseduje Content Frame
+      const frame = mockupRoot.userData.contentFrame;
+      if (frame && frame.userData.isContentFrame) {
+        designSection.classList.remove('hidden');
+        updateDesignButtonsState(frame);
+      } else {
+        designSection.classList.add('hidden');
+      }
     }
 
-    if (obj) {
-
-        obj.position.x =
-            (objects.length - 1) * .4 - 1;
-
-        obj.position.y =
-            (objects.length - 1) * .15;
-
-        document.getElementById("status").innerText =
-            "Dodat: " + obj.name;
-    }
-}
-
-/* SELECT */
-
-function selectObject(obj) {
-
-    selected = obj;
-
-    document.getElementById(
-        "selectedObject"
-    ).value = obj.name;
-
-    document.getElementById(
-        "rotationY"
-    ).value = obj.rotation.y;
-
-    document.getElementById(
-        "scale"
-    ).value = obj.scale.x;
-
-    document.getElementById(
-        "positionX"
-    ).value = obj.position.x;
-
-    document.getElementById(
-        "positionY"
-    ).value = obj.position.y;
-}
-
-/* PROPERTIES */
-
-function changeRotation(value) {
-
-    if (!selected) return;
-
-    selected.rotation.y =
-        Number(value);
-}
-
-function changeScale(value) {
-
-    if (!selected) return;
-
-    selected.scale.set(
-        Number(value),
-        Number(value),
-        Number(value)
-    );
-}
-
-function changePositionX(value) {
-
-    if (!selected) return;
-
-    selected.position.x =
-        Number(value);
-}
-
-function changePositionY(value) {
-
-    if (!selected) return;
-
-    selected.position.y =
-        Number(value);
-}
-
-/* BACKGROUND */
-
-function changeBackground(color) {
-
-    document.querySelector(
-        ".workspace"
-    ).style.background =
-        color;
-}
-
-/* RESET */
-
-function resetScene() {
-
-    objects.forEach(
-        obj => scene.remove(obj)
-    );
-
-    objects.length = 0;
-
-    selected = null;
-
-    document.getElementById(
-        "selectedObject"
-    ).value = "Nijedan";
-
-    document.getElementById(
-        "emptyMessage"
-    ).style.display = "block";
-
-    document.getElementById(
-        "status"
-    ).innerText =
-        "Nova scena";
-}
-
-/* AI SCENE */
-
-function generateScene() {
-
-    const text =
-        document.getElementById(
-            "prompt"
-        ).value.toLowerCase();
-
-    resetScene();
-
-    if (text.includes("telefon")) {
-        addObject("phone");
+    function updateDesignButtonsState(frame) {
+      if (frame.userData.hasImage) {
+        btnUpload.classList.add('hidden');
+        btnReplace.classList.remove('hidden');
+        btnRemove.classList.remove('hidden');
+      } else {
+        btnUpload.classList.remove('hidden');
+        btnReplace.classList.add('hidden');
+        btnRemove.classList.add('hidden');
+      }
     }
 
-    if (text.includes("laptop")) {
-        addObject("laptop");
-    }
-
-    if (text.includes("tablet")) {
-        addObject("tablet");
-    }
-
-    if (
-        text.includes("planner") ||
-        text.includes("planer") ||
-        text.includes("knjig")
-    ) {
-        addObject("book");
-    }
-
-    if (text.includes("card")) {
-        addObject("card");
-    }
-
-    if (
-        text.includes("stranic") ||
-        text.includes("page")
-    ) {
-        addObject("page");
-    }
-
-    if (objects.length === 0) {
-
-        addObject("phone");
-        addObject("laptop");
-        addObject("book");
-
-    }
-
-    document.getElementById(
-        "status"
-    ).innerText =
-        "AI scena generisana";
-}
-
-/* EXPORT */
-
-function exportImage() {
-
-    renderer.render(
-        scene,
-        camera
-    );
-
-    const link =
-        document.createElement("a");
-
-    link.download =
-        "marijana-ai-studio.png";
-
-    link.href =
-        renderer.domElement.toDataURL(
-            "image/png"
-        );
-
-    link.click();
-}
-
-/* CLICK OBJECT */
-
-canvas.addEventListener(
-    "pointerdown",
-    function(event) {
-
-        const rect =
-            canvas.getBoundingClientRect();
-
-        const mouse =
-            new THREE.Vector2(
-                ((event.clientX - rect.left) /
-                    rect.width) * 2 - 1,
-
-                -((event.clientY - rect.top) /
-                    rect.height) * 2 + 1
-            );
-
-        const raycaster =
-            new THREE.Raycaster();
-
-        raycaster.setFromCamera(
-            mouse,
-            camera
-        );
-
-        const hits =
-            raycaster.intersectObjects(
-                objects
-            );
-
-        if (hits.length) {
-
-            selectObject(
-                hits[0].object
-            );
-
-            document.getElementById(
-                "status"
-            ).innerText =
-                "Odabrano: " +
-                hits[0].object.name;
+    // Pronalazi korenski mockup čvor prilikom klika
+    function findMockupRoot(object) {
+      let curr = object;
+      while (curr) {
+        if (curr.userData && curr.userData.isMockupRoot) {
+          return curr;
         }
-
+        curr = curr.parent;
+      }
+      return null;
     }
-);
 
-/* ANIMATION */
+    // Klik za selekciju na 3D platnu
+    container.addEventListener('pointerdown', (e) => {
+      // Ignoriši klik ako je kliknuto van samog canvasa
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-function animate() {
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
 
-    requestAnimationFrame(
-        animate
-    );
+      if (intersects.length > 0) {
+        const root = findMockupRoot(intersects[0].object);
+        if (root) {
+          selectMockup(root);
+          return;
+        }
+      }
+    });
 
-    renderer.render(
-        scene,
-        camera
-    );
-}
+    /* =========================================================================
+       4. OBRADA DUGMIĆA & SLIKA (CANVA-STYLE INGESTION)
+       ========================================================================= */
 
-animate();
+    // Dodavanje telefona
+    document.getElementById('btn-add-phone').addEventListener('click', () => {
+      const phone = createPhoneMockup();
+      phone.position.set(0, 0, 0);
+      scene.add(phone);
+      mockupsInScene.push(phone);
+      selectMockup(phone);
+    });
 
-</script>
+    // Upload & Replace pokretači
+    btnUpload.addEventListener('click', () => fileInput.click());
+    btnReplace.addEventListener('click', () => fileInput.click());
 
+    // Učitavanje i obrada lokalnog fajla
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file || !selectedMockup) return;
+
+      const frame = selectedMockup.userData.contentFrame;
+      if (!frame) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          applyImageToFrame(frame, img);
+          updateDesignButtonsState(frame);
+          fileInput.value = ""; // Resetuj input da bi isti fajl mogao ponovo da se izabere
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Remove Image
+    btnRemove.addEventListener('click', () => {
+      if (!selectedMockup) return;
+      const frame = selectedMockup.userData.contentFrame;
+      if (frame) {
+        removeImageFromFrame(frame);
+        updateDesignButtonsState(frame);
+      }
+    });
+
+    /* =========================================================================
+       5. KONTROLE TRANSFORMACIJA
+       ========================================================================= */
+    inputRotY.addEventListener('input', (e) => {
+      if (!selectedMockup) return;
+      const deg = parseFloat(e.target.value);
+      selectedMockup.rotation.y = THREE.MathUtils.degToRad(deg);
+      valRotY.textContent = `${deg}°`;
+    });
+
+    inputScale.addEventListener('input', (e) => {
+      if (!selectedMockup) return;
+      const s = parseFloat(e.target.value);
+      selectedMockup.scale.set(s, s, s);
+      valScale.textContent = s.toFixed(2);
+    });
+
+    inputPosX.addEventListener('input', (e) => {
+      if (!selectedMockup) return;
+      const x = parseFloat(e.target.value);
+      selectedMockup.position.x = x;
+      valPosX.textContent = x.toFixed(1);
+    });
+
+    inputPosY.addEventListener('input', (e) => {
+      if (!selectedMockup) return;
+      const y = parseFloat(e.target.value);
+      selectedMockup.position.y = y;
+      valPosY.textContent = y.toFixed(1);
+    });
+
+    /* =========================================================================
+       6. EXPORT U PNG
+       ========================================================================= */
+    document.getElementById('btn-export-png').addEventListener('click', () => {
+      // Obavezno renderujemo pre snimanja
+      renderer.render(scene, camera);
+      const dataURL = renderer.domElement.toDataURL('image/png');
+
+      const link = document.createElement('a');
+      link.download = `Marijana-Studio-Mockup-${Date.now()}.png`;
+      link.href = dataURL;
+      link.click();
+    });
+
+    /* =========================================================================
+       7. RESIZE & RENDER LOOP
+       ========================================================================= */
+    window.addEventListener('resize', () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
 </body>
 </html>
