@@ -261,7 +261,7 @@
 </head>
 <body>
 
-  <!-- 1. Header sa novim brendingom -->
+  <!-- Header -->
   <header>
     <div class="brand-title">
       Marijana AI Studio
@@ -371,7 +371,7 @@
     const renderer = new THREE.WebGLRenderer({
       canvas: canvas,
       antialias: true,
-      preserveDrawingBuffer: true // Neophodno za pouzdan PNG export
+      preserveDrawingBuffer: true
     });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -398,9 +398,6 @@
        2. REUSABLE CONTENT FRAME & MOCKUP ARHITEKTURA
        ========================================================================= */
 
-    /**
-     * Pomoćna funkcija za generisanje zaobljene 2D konture (Rounded Rectangle)
-     */
     function createRoundedRectShape(width, height, radius) {
       const shape = new THREE.Shape();
       const x = -width / 2;
@@ -417,9 +414,6 @@
       return shape;
     }
 
-    /**
-     * Pravi generički Content Frame koji se može zakačiti na bilo koji 3D Mockup
-     */
     function createContentFrame(width, height, radius = 0.1) {
       const shape = createRoundedRectShape(width, height, radius);
       const geometry = new THREE.ShapeGeometry(shape, 32);
@@ -444,9 +438,6 @@
       return frameMesh;
     }
 
-    /**
-     * Kreira kompletan telefon kao hijerarhijski 3D Mockup sa telom i namenskim ekranom
-     */
     function createPhoneMockup() {
       const phoneGroup = new THREE.Group();
       phoneGroup.name = "Telefon";
@@ -460,7 +451,7 @@
       const phoneDepth = 0.16;
       const phoneRadius = 0.28;
 
-      // 1. Telo telefona (ExtrudeGeometry za premijum zakrivljene ivice)
+      // 1. Telo telefona
       const bodyShape = createRoundedRectShape(phoneWidth, phoneHeight, phoneRadius);
       const extrudeSettings = {
         depth: phoneDepth,
@@ -471,7 +462,7 @@
         bevelThickness: 0.04
       };
       const bodyGeom = new THREE.ExtrudeGeometry(bodyShape, extrudeSettings);
-      bodyGeom.center(); // centriranje tela
+      bodyGeom.center();
 
       const bodyMat = new THREE.MeshStandardMaterial({
         color: 0x1e222d,
@@ -482,36 +473,35 @@
       bodyMesh.name = "PhoneBody";
       phoneGroup.add(bodyMesh);
 
-      // 2. Kamera bump na poleđini
+      // 2. Kamera modul
       const camBumpShape = createRoundedRectShape(0.65, 0.65, 0.15);
       const camGeom = new THREE.ExtrudeGeometry(camBumpShape, { depth: 0.04, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02 });
       const camMesh = new THREE.Mesh(camGeom, bodyMat);
       camMesh.position.set(-0.55, 1.35, -phoneDepth / 2 - 0.04);
       phoneGroup.add(camMesh);
 
-      // 3. Content Frame (Ekran telefona)
+      // 3. Ekran telefona
       const screenWidth = 1.84;
       const screenHeight = 3.94;
       const screenRadius = 0.22;
       const screenFrame = createContentFrame(screenWidth, screenHeight, screenRadius);
-      
-      // Postavljanje ekrana tik ispred prednje maske
       screenFrame.position.set(0, 0, (phoneDepth / 2) + 0.041);
       phoneGroup.add(screenFrame);
 
-      // Referenca za lak pristup ekranu iz korena
       phoneGroup.userData.contentFrame = screenFrame;
-
       return phoneGroup;
     }
 
     /**
-     * Canva-Style Object-Fit: Cover algoritam za Three.js teksturu
+     * PRAVI OBJECT-FIT: COVER SISTEM ZA THREE.JS TEKSTURU
+     * - Zadržava originalni aspect ratio bez ikakvog sabijanja/rastezanja
+     * - Centrira sliku tačno u sredinu ekrana (center: 0.5, 0.5)
+     * - Cropuje višak koji izlazi van okvira
      */
     function applyImageToFrame(frameMesh, imgElement) {
       if (!frameMesh || !frameMesh.userData.isContentFrame) return;
 
-      // Čišćenje stare teksture
+      // Oslobodi prethodnu teksturu ako postoji
       if (frameMesh.userData.activeTexture) {
         frameMesh.userData.activeTexture.dispose();
       }
@@ -523,20 +513,29 @@
       texture.generateMipmaps = true;
       texture.minFilter = THREE.LinearMipmapLinearFilter;
 
-      // Računanje srazmere za object-fit: cover
-      const frameAspect = frameMesh.userData.frameWidth / frameMesh.userData.frameHeight;
-      const imageAspect = imgElement.width / imgElement.height;
+      // Dimenzije ekrana i originalne slike
+      const frameW = frameMesh.userData.frameWidth;
+      const frameH = frameMesh.userData.frameHeight;
+      const imgW = imgElement.width || imgElement.naturalWidth;
+      const imgH = imgElement.height || imgElement.naturalHeight;
 
-      if (imageAspect > frameAspect) {
-        // Slika je šira od ekrana -> skaliraj po visini, cropuj višak širine
-        texture.repeat.set(frameAspect / imageAspect, 1);
-        texture.offset.set((1 - (frameAspect / imageAspect)) / 2, 0);
+      const frameRatio = frameW / frameH;
+      const imageRatio = imgW / imgH;
+
+      // Skaliranje iz tačnog centra (0.5, 0.5) sprečava pomeranje udesno/nagore
+      texture.center.set(0.5, 0.5);
+
+      if (imageRatio > frameRatio) {
+        // Slika je proporcionalno šira od ekrana -> skaliraj po visini, cropuj levu i desnu stranu
+        const scaleX = frameRatio / imageRatio;
+        texture.repeat.set(scaleX, 1);
       } else {
-        // Slika je viša od ekrana -> skaliraj po širini, cropuj višak visine
-        texture.repeat.set(1, imageAspect / frameAspect);
-        texture.offset.set(0, (1 - (imageAspect / frameAspect)) / 2);
+        // Slika je proporcionalno viša od ekrana -> skaliraj po širini, cropuj vrh i dno
+        const scaleY = imageRatio / frameRatio;
+        texture.repeat.set(1, scaleY);
       }
 
+      texture.offset.set(0, 0);
       texture.needsUpdate = true;
 
       // Ažuriranje materijala ekrana
@@ -550,9 +549,6 @@
       frameMesh.userData.hasImage = true;
     }
 
-    /**
-     * Vraća ekran u početno neutralno stanje
-     */
     function removeImageFromFrame(frameMesh) {
       if (!frameMesh || !frameMesh.userData.isContentFrame) return;
 
@@ -580,7 +576,6 @@
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    // DOM elementi panela
     const selectedObjTitle = document.getElementById('selected-obj-title');
     const designSection = document.getElementById('design-section');
     const transformsSection = document.getElementById('transforms-section');
@@ -612,7 +607,6 @@
       selectedObjTitle.textContent = mockupRoot.name || "Mockup";
       transformsSection.classList.remove('hidden');
 
-      // Sinhronizacija vrednosti u panelu
       const degY = Math.round(THREE.MathUtils.radToDeg(mockupRoot.rotation.y));
       inputRotY.value = degY;
       valRotY.textContent = `${degY}°`;
@@ -626,7 +620,6 @@
       inputPosY.value = mockupRoot.position.y;
       valPosY.textContent = mockupRoot.position.y.toFixed(1);
 
-      // Prikaz DESIGN sekcije ako mockup poseduje Content Frame
       const frame = mockupRoot.userData.contentFrame;
       if (frame && frame.userData.isContentFrame) {
         designSection.classList.remove('hidden');
@@ -648,7 +641,6 @@
       }
     }
 
-    // Pronalazi korenski mockup čvor prilikom klika
     function findMockupRoot(object) {
       let curr = object;
       while (curr) {
@@ -660,9 +652,7 @@
       return null;
     }
 
-    // Klik za selekciju na 3D platnu
     container.addEventListener('pointerdown', (e) => {
-      // Ignoriši klik ako je kliknuto van samog canvasa
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -683,7 +673,6 @@
        4. OBRADA DUGMIĆA & SLIKA (CANVA-STYLE INGESTION)
        ========================================================================= */
 
-    // Dodavanje telefona
     document.getElementById('btn-add-phone').addEventListener('click', () => {
       const phone = createPhoneMockup();
       phone.position.set(0, 0, 0);
@@ -692,11 +681,9 @@
       selectMockup(phone);
     });
 
-    // Upload & Replace pokretači
     btnUpload.addEventListener('click', () => fileInput.click());
     btnReplace.addEventListener('click', () => fileInput.click());
 
-    // Učitavanje i obrada lokalnog fajla
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file || !selectedMockup) return;
@@ -710,14 +697,13 @@
         img.onload = () => {
           applyImageToFrame(frame, img);
           updateDesignButtonsState(frame);
-          fileInput.value = ""; // Resetuj input da bi isti fajl mogao ponovo da se izabere
+          fileInput.value = "";
         };
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     });
 
-    // Remove Image
     btnRemove.addEventListener('click', () => {
       if (!selectedMockup) return;
       const frame = selectedMockup.userData.contentFrame;
@@ -762,7 +748,6 @@
        6. EXPORT U PNG
        ========================================================================= */
     document.getElementById('btn-export-png').addEventListener('click', () => {
-      // Obavezno renderujemo pre snimanja
       renderer.render(scene, camera);
       const dataURL = renderer.domElement.toDataURL('image/png');
 
