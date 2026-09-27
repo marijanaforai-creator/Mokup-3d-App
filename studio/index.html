@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marijana AI Studio</title>
   
-  <!-- Google Fonts: Plus Jakarta Sans za elegantan premium izgled -->
+  <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -432,7 +432,12 @@
         frameWidth: width,
         frameHeight: height,
         hasImage: false,
-        activeTexture: null
+        activeTexture: null,
+        // Pripremljena interna stanja za buduće kontrole (Zoom, PanX, PanY)
+        imgElement: null,
+        zoom: 1.0,
+        panX: 0.0,
+        panY: 0.0
       };
 
       return frameMesh;
@@ -451,7 +456,7 @@
       const phoneDepth = 0.16;
       const phoneRadius = 0.28;
 
-      // 1. Telo telefona
+      // 1. Telo telefona (ExtrudeGeometry)
       const bodyShape = createRoundedRectShape(phoneWidth, phoneHeight, phoneRadius);
       const extrudeSettings = {
         depth: phoneDepth,
@@ -473,14 +478,14 @@
       bodyMesh.name = "PhoneBody";
       phoneGroup.add(bodyMesh);
 
-      // 2. Kamera modul
+      // 2. Kamera modul na poleđini
       const camBumpShape = createRoundedRectShape(0.65, 0.65, 0.15);
       const camGeom = new THREE.ExtrudeGeometry(camBumpShape, { depth: 0.04, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02 });
       const camMesh = new THREE.Mesh(camGeom, bodyMat);
       camMesh.position.set(-0.55, 1.35, -phoneDepth / 2 - 0.04);
       phoneGroup.add(camMesh);
 
-      // 3. Ekran telefona
+      // 3. Ekran telefona (Content Frame)
       const screenWidth = 1.84;
       const screenHeight = 3.94;
       const screenRadius = 0.22;
@@ -494,48 +499,69 @@
 
     /**
      * PRAVI OBJECT-FIT: COVER SISTEM ZA THREE.JS TEKSTURU
-     * - Zadržava originalni aspect ratio bez ikakvog sabijanja/rastezanja
-     * - Centrira sliku tačno u sredinu ekrana (center: 0.5, 0.5)
-     * - Cropuje višak koji izlazi van okvira
+     * Garantuje:
+     * 1. Nema deformisanja/sabijanja slike (originalni aspect ratio je uvek očuvan).
+     * 2. Savršeno horizontalno i vertikalno centriranje bez bežanja udesno.
+     * 3. Ravnomerno odsecanje (crop) viška sa obe strane.
+     * 4. Potpuno resetovanje stanja za svaku novu sliku.
      */
     function applyImageToFrame(frameMesh, imgElement) {
       if (!frameMesh || !frameMesh.userData.isContentFrame) return;
 
-      // Oslobodi prethodnu teksturu ako postoji
+      // Čišćenje stare teksture
       if (frameMesh.userData.activeTexture) {
         frameMesh.userData.activeTexture.dispose();
+        frameMesh.userData.activeTexture = null;
       }
 
+      // Sačuvaj referencu na sliku i resetuj unutrašnje parametre
+      frameMesh.userData.imgElement = imgElement;
+      frameMesh.userData.zoom = 1.0;
+      frameMesh.userData.panX = 0.0;
+      frameMesh.userData.panY = 0.0;
+
+      // Kreiraj novu Three.js teksturu
       const texture = new THREE.Texture(imgElement);
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.wrapS = THREE.ClampToEdgeWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       texture.generateMipmaps = true;
       texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
 
-      // Dimenzije ekrana i originalne slike
+      // Stvarne dimenzije ekrana i originalne slike
       const frameW = frameMesh.userData.frameWidth;
       const frameH = frameMesh.userData.frameHeight;
-      const imgW = imgElement.width || imgElement.naturalWidth;
-      const imgH = imgElement.height || imgElement.naturalHeight;
+      const imgW = imgElement.naturalWidth || imgElement.width;
+      const imgH = imgElement.naturalHeight || imgElement.height;
 
       const frameRatio = frameW / frameH;
       const imageRatio = imgW / imgH;
 
-      // Skaliranje iz tačnog centra (0.5, 0.5) sprečava pomeranje udesno/nagore
-      texture.center.set(0.5, 0.5);
+      let repeatX = 1.0;
+      let repeatY = 1.0;
+      let offsetX = 0.0;
+      let offsetY = 0.0;
 
+      // object-fit: cover matematika
       if (imageRatio > frameRatio) {
-        // Slika je proporcionalno šira od ekrana -> skaliraj po visini, cropuj levu i desnu stranu
-        const scaleX = frameRatio / imageRatio;
-        texture.repeat.set(scaleX, 1);
+        // Slika je proporcionalno šira od ekrana -> pokriva punu visinu, višak širine se cropuje sa leve i desne strane
+        repeatX = frameRatio / imageRatio;
+        repeatY = 1.0;
+        offsetX = (1.0 - repeatX) / 2.0;
+        offsetY = 0.0;
       } else {
-        // Slika je proporcionalno viša od ekrana -> skaliraj po širini, cropuj vrh i dno
-        const scaleY = imageRatio / frameRatio;
-        texture.repeat.set(1, scaleY);
+        // Slika je proporcionalno viša od ekrana -> pokriva punu širinu, višak visine se cropuje odozgo i odozdo
+        repeatX = 1.0;
+        repeatY = imageRatio / frameRatio;
+        offsetX = 0.0;
+        offsetY = (1.0 - repeatY) / 2.0;
       }
 
-      texture.offset.set(0, 0);
+      // Ishodište za transformaciju se fiksira na (0,0) kako bi izračunati offsetX/offsetY tačno centrirali isečak
+      texture.center.set(0, 0);
+      texture.repeat.set(repeatX, repeatY);
+      texture.offset.set(offsetX, offsetY);
       texture.needsUpdate = true;
 
       // Ažuriranje materijala ekrana
@@ -549,6 +575,9 @@
       frameMesh.userData.hasImage = true;
     }
 
+    /**
+     * Vraća ekran u neutralnu početnu boju
+     */
     function removeImageFromFrame(frameMesh) {
       if (!frameMesh || !frameMesh.userData.isContentFrame) return;
 
@@ -556,6 +585,11 @@
         frameMesh.userData.activeTexture.dispose();
         frameMesh.userData.activeTexture = null;
       }
+
+      frameMesh.userData.imgElement = null;
+      frameMesh.userData.zoom = 1.0;
+      frameMesh.userData.panX = 0.0;
+      frameMesh.userData.panY = 0.0;
 
       if (frameMesh.material) frameMesh.material.dispose();
       frameMesh.material = new THREE.MeshStandardMaterial({
@@ -777,4 +811,4 @@
     animate();
   </script>
 </body>
-</html>
+</html>ss
