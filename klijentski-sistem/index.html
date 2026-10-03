@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Klijentski poslovni sajt — fitnes.studio</title>
+<style>
+:root{--ink:#151515;--gold:#c9a227;--cream:#f7f4ee;--white:#fff;--muted:#777;--line:#e7e1d5}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--ink);background:var(--cream)}
+button,input,textarea{font:inherit}button{cursor:pointer}.top{background:var(--ink);color:#fff;padding:14px 5%;display:flex;justify-content:space-between;align-items:center}.brand{font-weight:700}.top button{background:transparent;color:#fff;border:1px solid #555;padding:8px 14px;border-radius:8px}
+.hero{padding:80px 7%;background:#171717;color:#fff}.hero h1{font-size:clamp(38px,7vw,72px);margin:0 0 15px}.hero p{max-width:650px;color:#ccc;font-size:18px}.cta{background:var(--gold);color:#111;border:0;padding:13px 20px;border-radius:8px;font-weight:700}
+.wrap{max-width:1200px;margin:auto;padding:42px 5%}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}.card img{width:100%;height:180px;object-fit:cover;background:#ddd}.card-body{padding:18px}.price{font-weight:700}.admin{display:none;position:fixed;inset:0;background:#f5f5f5;z-index:20;overflow:auto}.admin.open{display:block}.adminbar{background:#171717;color:#fff;padding:16px 5%;display:flex;justify-content:space-between}.adminwrap{max-width:1100px;margin:auto;padding:30px 5%}.panels{display:grid;grid-template-columns:220px 1fr;gap:22px}.nav button{display:block;width:100%;text-align:left;padding:12px;border:0;background:#fff;margin-bottom:7px;border-radius:8px}.nav button.active{background:#171717;color:#fff}.panel{background:#fff;padding:24px;border-radius:14px}.field{display:grid;gap:7px;margin:14px 0}.field input,.field textarea{padding:11px;border:1px solid #ccc;border-radius:8px}.save{background:#171717;color:#fff;border:0;padding:12px 18px;border-radius:8px}.notice{padding:12px;background:#fff8dc;border:1px solid #eadb8c;border-radius:8px;margin-bottom:18px;color:#665500}
+@media(max-width:700px){.panels{grid-template-columns:1fr}.hero{padding:55px 6%}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand" id="brand">FITNES STUDIO</div><button onclick="openAdmin()">Administracija</button></header>
+<section class="hero"><h1 id="heroTitle">Snaga. Energija. Rezultat.</h1><p id="heroText">Jedno mesto za naše teretane, proizvode, akcije i informacije.</p><button class="cta" onclick="document.getElementById('ponuda').scrollIntoView()">Pogledaj ponudu</button></section>
+<main class="wrap">
+<h2>Lokacije</h2><div class="grid" id="locations"></div>
+<h2>Proizvodi i ponuda</h2><div class="grid" id="products"></div>
+</main>
+<section class="admin" id="admin">
+<div class="adminbar"><b>Administracija — <span id="adminBrand">FITNES STUDIO</span></b><button onclick="closeAdmin()">Zatvori</button></div>
+<div class="adminwrap">
+<div class="notice">Ovo je početna verzija klijentskog panela. Kupac uređuje sadržaj bez menjanja koda. Za produkciju ćemo povezati bezbednu prijavu, bazu i skladište slika.</div>
+<div class="panels">
+<nav class="nav">
+<button class="active" onclick="showTab('osnovno',this)">Osnovni podaci</button>
+<button onclick="showTab('proizvodi',this)">Proizvodi</button>
+<button onclick="showTab('lokacije',this)">Lokacije</button>
+<button onclick="showTab('akcije',this)">Akcije i baneri</button>
+</nav>
+<section class="panel" id="tab"></section>
+</div></div></section>
+<script>
+const KEY='fitnes-studio-demo-v1';
+const defaults={brand:'FITNES STUDIO',title:'Snaga. Energija. Rezultat.',text:'Jedno mesto za naše teretane, proizvode, akcije i informacije.',locations:[{name:'Beograd — Centar',text:'Teretana i grupni treninzi',img:''},{name:'Novi Sad',text:'Fitness & wellness',img:''}],products:[{name:'Protein Pro',price:'29,90 €',img:''},{name:'Fitness paket',price:'49,90 €',img:''}],actions:[{title:'Akcija meseca',text:'Članarina po posebnoj ponudi',img:''}]};
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||defaults;
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render();}
+function render(){brand.textContent=data.brand;adminBrand.textContent=data.brand;heroTitle.textContent=data.title;heroText.textContent=data.text;
+locations.innerHTML=data.locations.map(x=>'<article class="card">'+(x.img?'<img src="'+x.img+'">':'<div style="height:180px;background:#ddd"></div>')+'<div class="card-body"><h3>'+esc(x.name)+'</h3><p>'+esc(x.text)+'</p></div></article>').join('');
+products.innerHTML=data.products.map(x=>'<article class="card">'+(x.img?'<img src="'+x.img+'">':'<div style="height:180px;background:#ddd"></div>')+'<div class="card-body"><h3>'+esc(x.name)+'</h3><p class="price">'+esc(x.price)+'</p></div></article>').join('');}
+function esc(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function openAdmin(){admin.classList.add('open');showTab('osnovno',document.querySelector('.nav button'))}function closeAdmin(){admin.classList.remove('open')}
+function showTab(t,btn){document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');let h='';
+if(t==='osnovno')h='<h2>Osnovni podaci</h2>'+field('Naziv brenda','brand',data.brand)+field('Naslov','title',data.title)+field('Opis','text',data.text)+'<button class="save" onclick="saveBasic()">Sačuvaj</button>';
+if(t==='proizvodi')h='<h2>Proizvodi</h2>'+data.products.map((x,i)=>'<div class="field"><b>Proizvod '+(i+1)+'</b><input id="pn'+i+'" value="'+esc(x.name)+'"><input id="pp'+i+'" value="'+esc(x.price)+'"></div>').join('')+'<button class="save" onclick="saveProducts()">Sačuvaj proizvode</button>';
+if(t==='lokacije')h='<h2>Lokacije</h2>'+data.locations.map((x,i)=>'<div class="field"><b>Lokacija '+(i+1)+'</b><input id="ln'+i+'" value="'+esc(x.name)+'"><input id="lt'+i+'" value="'+esc(x.text)+'"></div>').join('')+'<button class="save" onclick="saveLocations()">Sačuvaj lokacije</button>';
+if(t==='akcije')h='<h2>Akcije i baneri</h2>'+data.actions.map((x,i)=>'<div class="field"><input id="an'+i+'" value="'+esc(x.title)+'"><textarea id="at'+i+'">'+esc(x.text)+'</textarea></div>').join('')+'<button class="save" onclick="saveActions()">Sačuvaj akcije</button>';
+tab.innerHTML=h}
+function field(label,id,val){return '<div class="field"><label>'+label+'</label><input id="'+id+'" value="'+esc(val)+'"></div>'}
+function saveBasic(){data.brand=brand.value;data.title=title.value;data.text=text.value;save()}
+function saveProducts(){data.products.forEach((x,i)=>{x.name=document.getElementById('pn'+i).value;x.price=document.getElementById('pp'+i).value});save()}
+function saveLocations(){data.locations.forEach((x,i)=>{x.name=document.getElementById('ln'+i).value;x.text=document.getElementById('lt'+i).value});save()}
+function saveActions(){data.actions.forEach((x,i)=>{x.title=document.getElementById('an'+i).value;x.text=document.getElementById('at'+i).value});save()}
+render();
+</script></body></html>
